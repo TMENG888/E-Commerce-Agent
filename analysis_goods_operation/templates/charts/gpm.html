@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}GPM排行榜 - 商品精细化运营数据分析平台{% endblock %}
+
+{% block page_title %}💰 GPM排行榜{% endblock %}
+
+{% block page_subtitle %}商品利润贡献排名分析{% endblock %}
+
+{% block content %}
+<div class="chart-grid">
+    <div class="chart-card chart-full">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>📊</span>
+                <span>GPM排行榜TOP20</span>
+            </h3>
+        </div>
+        <div id="gpm-chart" class="chart-container" style="height: 400px;"></div>
+    </div>
+</div>
+
+<div style="margin-top: 1rem;">
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>📋</span>
+                <span>详细数据</span>
+            </h3>
+        </div>
+        <div style="overflow-x: auto;">
+            <table id="gpm-table" style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">排名</th>
+                        <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">商品名称</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">价格</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">GPM</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">曝光人数</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">支付人数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in gpm_data %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 0.5rem;">{{ loop.index }}</td>
+                        <td style="padding: 0.5rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ item.商品名称 }}</td>
+                        <td style="text-align: right; padding: 0.5rem;">¥{{ item.商品价格 }}</td>
+                        <td style="text-align: right; padding: 0.5rem;">{{ item.GPM }}</td>
+                        <td style="text-align: right; padding: 0.5rem;">{{ item.商品曝光人数 }}</td>
+                        <td style="text-align: right; padding: 0.5rem;">{{ item.支付人数 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function renderChart(divId, chartDataStr) {
+        try {
+            var chart = JSON.parse(chartDataStr);
+            var container = document.getElementById(divId);
+            if (!container) {
+                console.error('Container not found:', divId);
+                return;
+            }
+            
+            var data = chart.data || [];
+            var layout = chart.layout || {};
+            
+            layout.autosize = true;
+            layout.width = null;
+            layout.height = null;
+            
+            layout.margin = layout.margin || {};
+            layout.margin.l = layout.margin.l || 50;
+            layout.margin.r = layout.margin.r || 50;
+            layout.margin.t = layout.margin.t || 40;
+            layout.margin.b = layout.margin.b || 40;
+            
+            layout.font = layout.font || {};
+            layout.font.size = layout.font.size || 10;
+            
+            Plotly.newPlot(divId, data, layout);
+        } catch (err) {
+            console.error('Error rendering chart', divId, err);
+        }
+    }
+
+    window.onload = function() {
+        renderChart('gpm-chart', '{{ gpm_chart|safe }}');
+    };
+</script>
+{% endblock %}

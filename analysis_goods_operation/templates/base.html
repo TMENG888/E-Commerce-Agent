@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}商品精细化运营数据分析平台{% endblock %}</title>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: #1f1f1f;
+            --text-secondary: #666666;
+            --text-muted: #999999;
+            --border-color: #e8e8e8;
+            --accent-blue: #1890ff;
+            --accent-green: #52c41a;
+            --accent-orange: #faad14;
+            --accent-purple: #722ed1;
+            --accent-red: #f5222d;
+            --sidebar-bg: #f5f5f5;
+            --sidebar-text: #1f1f1f;
+            --sidebar-text-active: #1f1f1f;
+            --sidebar-active-bg: #ffe600;
+            --header-bg: #ffffff;
+            --header-border: #e8e8e8;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+        }
+
+        body.dark-mode {
+            --bg-primary: #1a1a2e;
+            --bg-card: #16213e;
+            --text-primary: #ffffff;
+            --text-secondary: #b8b8d0;
+            --text-muted: #8888a0;
+            --border-color: #2d3f5a;
+            --sidebar-bg: #0f0f1a;
+            --sidebar-text: #b8b8d0;
+            --sidebar-text-active: #ffffff;
+            --sidebar-active-bg: #2d3f5a;
+            --header-bg: #16213e;
+            --header-border: #2d3f5a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar {
+            width: 180px;
+            flex: 0 0 180px;
+            max-width: 180px;
+            min-width: 180px;
+            background: var(--sidebar-bg);
+            height: calc(-72px + 100vh);
+            position: fixed;
+            left: 0;
+            top: 72px;
+            overflow: auto;
+            scrollbar-width: thin;
+            scrollbar-gutter: stable;
+            z-index: 50;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .sidebar-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 180px;
+            height: 72px;
+            background: var(--sidebar-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid var(--border-color);
+            z-index: 51;
+        }
+
+        .sidebar-header h1 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--sidebar-text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-header h1 svg { 
+            width: 1.25rem; 
+            height: 1.25rem; 
+            color: var(--accent-blue);
+        }
+
+        .menuWrap {
+            padding-top: 0;
+        }
+
+        .menuItemWrap {
+            margin-bottom: 0;
+        }
+
+        .menuItem {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            color: var(--sidebar-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .menuItem:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .menuItem img,
+        .menuItem svg {
+            width: 16px;
+            height: 16px;
+            object-fit: fill;
+            flex-shrink: 0;
+        }
+
+        .menuItemText {
+            flex: 1;
+            margin-left: 0.5rem;
+            font-size: 0.8125rem;
+        }
+
+        .menuItemArrow {
+            width: 12px;
+            height: 12px;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .menuItemArrow svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .menuItemArrow.expanded {
+            transform: rotate(180deg);
+        }
+
+        .subMenuWrap {
+            overflow: hidden;
+            height: 0;
+            transition: height 0.3s ease;
+        }
+
+        .subMenu {
+            background: var(--sidebar-bg);
+        }
+
+        .subMenuItem {
+            padding: 0.625rem 1rem 0.625rem 2.5rem;
+            color: var(--sidebar-text);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .subMenuItem:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .subMenuItem.active {
+            font-weight: 600;
+            background: var(--sidebar-active-bg);
+            color: var(--sidebar-text-active);
+        }
+
+        .subMenuItem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: var(--accent-blue);
+        }
+
+        .line {
+            height: 1px;
+            background: var(--border-color);
+            margin: 0.5rem 0;
+        }
+
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle span {
+            font-size: 0.7rem;
+            color: var(--sidebar-text);
+        }
+
+        .theme-toggle svg {
+            width: 1rem;
+            height: 1rem;
+            color: var(--sidebar-text);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 180px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-header {
+            position: fixed;
+            top: 0;
+            left: 180px;
+            right: 0;
+            height: 72px;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--header-border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 40;
+        }
+
+        .page-header-title h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .page-header-title p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .page-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .last-update {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: #ffffff;
+            border-color: var(--accent-blue);
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+
+        .page-content {
+            flex: 1;
+            padding: 2rem;
+            padding-top: calc(72px + 2rem);
+            overflow-y: auto;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.875rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .kpi-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-card-title {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .kpi-card-icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .kpi-card-icon.blue { 
+            background: rgba(24, 144, 255, 0.1); 
+            color: var(--accent-blue); 
+        }
+        .kpi-card-icon.green { 
+            background: rgba(82, 196, 26, 0.1); 
+            color: var(--accent-green); 
+        }
+        .kpi-card-icon.orange { 
+            background: rgba(250, 173, 20, 0.1); 
+            color: var(--accent-orange); 
+        }
+        .kpi-card-icon.purple { 
+            background: rgba(114, 46, 209, 0.1); 
+            color: var(--accent-purple); 
+        }
+
+        .kpi-card-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .kpi-card-subtitle {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .chart-full { grid-column: span 4; }
+        .chart-half { grid-column: span 2; }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .chart-card-title {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-card-link {
+            font-size: 0.65rem;
+            color: var(--accent-blue);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .chart-card-link:hover { text-decoration: underline; }
+
+        .chart-container { 
+            width: 100%; 
+            flex: 1;
+            min-height: 200px;
+            overflow: hidden; 
+            border-radius: var(--radius-md);
+            position: relative;
+        }
+
+        @media (max-width: 1400px) {
+            .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+            .chart-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-full { grid-column: span 2; }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { 
+                width: 100%; 
+                height: auto; 
+                position: relative;
+                top: 0;
+            }
+            .sidebar-header {
+                position: relative;
+                width: 100%;
+            }
+            .main-content { margin-left: 0; }
+            .page-header {
+                left: 0;
+                position: relative;
+            }
+            .menuWrap {
+                padding-top: 0;
+            }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-grid { grid-template-columns: 1fr; }
+            .chart-full { grid-column: span 1; }
+        }
+
+        @media (max-width: 600px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+            .page-header { flex-direction: column; gap: 0.5rem; padding: 0.75rem; }
+            .page-content { padding: 1rem; padding-top: calc(72px + 1rem); }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                数据分析平台
+            </h1>
+        </div>
+
+        <div class="menuWrap">
+            <div class="menuItemWrap">
+                <div class="menuItem" data-menu="overview">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
+                    </svg>
+                    <span class="menuItemText">概览</span>
+                    <div class="menuItemArrow expanded" id="arrow-overview">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="subMenuWrap" id="submenu-overview" style="height: 36px;">
+                    <div class="subMenu" style="height: 36px;">
+                        <div class="subMenuItem {% if active_page == 'dashboard' %}active{% endif %}" data-href="/">数据总览</div>
+                    </div>
+                </div>
+                <div class="line" style="visibility: visible;"></div>
+            </div>
+
+            <div class="menuItemWrap">
+                <div class="menuItem" data-menu="charts">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                    <span class="menuItemText">图表分析</span>
+                    <div class="menuItemArrow" id="arrow-charts">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="subMenuWrap" id="submenu-charts" style="height: 0px;">
+                    <div class="subMenu" style="height: 72px;">
+                        <div class="subMenuItem {% if active_page == 'gpm' %}active{% endif %}" data-href="/charts/gpm">GPM排行榜</div>
+                        <div class="subMenuItem {% if active_page == 'price-band' %}active{% endif %}" data-href="/charts/price-band">价格带分析</div>
+                    </div>
+                </div>
+                <div class="line" style="visibility: visible;"></div>
+            </div>
+
+            <div class="menuItemWrap">
+                <div class="menuItem" data-menu="data">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    </svg>
+                    <span class="menuItemText">数据</span>
+                    <div class="menuItemArrow" id="arrow-data">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="subMenuWrap" id="submenu-data" style="height: 0px;">
+                    <div class="subMenu" style="height: 144px;">
+                        <div class="subMenuItem {% if active_page == 'products' %}active{% endif %}" data-href="/products">商品列表</div>
+                        <div class="subMenuItem {% if active_page == 'category-analysis' %}active{% endif %}" data-href="/category-analysis">类目分析</div>
+                        <div class="subMenuItem {% if active_page == 'upload' %}active{% endif %}" data-href="/upload">上传数据</div>
+                        <div class="subMenuItem {% if active_page == 'strategy' %}active{% endif %}" data-href="/strategy">策略说明</div>
+                    </div>
+                </div>
+                <div class="line" style="visibility: visible;"></div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="theme-toggle" id="theme-toggle">
+                    <span id="theme-text">🌙 深色模式</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <div class="page-header-title">
+                <h1>{% block page_title %}数据仪表盘{% endblock %}</h1>
+                <p>{% block page_subtitle %}{% endblock %}</p>
+                {% if timestamp %}
+                <div class="last-update">最后更新: {{ timestamp }}</div>
+                {% endif %}
+            </div>
+            <div class="page-header-actions">
+                {% block header_actions %}{% endblock %}
+            </div>
+        </header>
+
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script>
+        window.analysisData = null;
+        
+        async function loadAnalysisData(forceRefresh = false) {
+            if (!forceRefresh) {
+                const cachedData = localStorage.getItem('analysisData');
+                if (cachedData) {
+                    try {
+                        window.analysisData = JSON.parse(cachedData);
+                        console.log('Loaded analysis data from localStorage');
+                        return;
+                    } catch (e) {
+                        console.error('Failed to parse cached data:', e);
+                        localStorage.removeItem('analysisData');
+                    }
+                }
+            }
+            
+            try {
+                const response = await fetch('/api/all_data');
+                const data = await response.json();
+                window.analysisData = data;
+                localStorage.setItem('analysisData', JSON.stringify(data));
+                console.log('Loaded analysis data from server and cached to localStorage');
+            } catch (e) {
+                console.error('Failed to load analysis data:', e);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadAnalysisData();
+            
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeText = document.getElementById('theme-text');
+            const body = document.body;
+
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-mode');
+                themeText.textContent = '☀️ 浅色模式';
+            }
+
+            themeToggle.addEventListener('click', function() {
+                body.classList.toggle('dark-mode');
+                if (body.classList.contains('dark-mode')) {
+                    themeText.textContent = '☀️ 浅色模式';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeText.textContent = '🌙 深色模式';
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            const currentPath = window.location.pathname;
+
+            const menuItems = document.querySelectorAll('.menuItem');
+            menuItems.forEach(function(item) {
+                item.addEventListener('click', function() {
+                    const menuName = this.getAttribute('data-menu');
+                    const subMenu = document.getElementById('submenu-' + menuName);
+                    const arrow = document.getElementById('arrow-' + menuName);
+                    
+                    if (subMenu.style.height === '0px') {
+                        const subMenuHeight = subMenu.querySelector('.subMenu').offsetHeight;
+                        subMenu.style.height = subMenuHeight + 'px';
+                        arrow.classList.add('expanded');
+                    } else {
+                        subMenu.style.height = '0px';
+                        arrow.classList.remove('expanded');
+                    }
+                });
+            });
+
+            const subMenuItems = document.querySelectorAll('.subMenuItem');
+            subMenuItems.forEach(function(item) {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const href = this.getAttribute('data-href');
+                    if (href) {
+                        subMenuItems.forEach(function(el) {
+                            el.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                        
+                        history.pushState({ path: href }, '', href);
+                        
+                        loadPageContent(href);
+                    }
+                }, true);
+            });
+
+            function loadPageContent(path) {
+                const pageContent = document.querySelector('.page-content');
+                pageContent.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; min-height: 200px;">加载中...</div>';
+                
+                fetch(path, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        
+                        const newScripts = tempDiv.querySelectorAll('script');
+                        newScripts.forEach(script => {
+                            if (!script.src) {
+                                try {
+                                    const scriptContent = script.textContent;
+                                    window.eval(scriptContent);
+                                } catch (e) {
+                                    console.error('Script execution error:', e);
+                                }
+                            }
+                        });
+                        
+                        const newContent = tempDiv.querySelector('.page-content');
+                        if (newContent) {
+                            pageContent.innerHTML = newContent.innerHTML;
+                        } else {
+                            pageContent.innerHTML = html;
+                        }
+                        
+                        const pageHeader = document.querySelector('.page-header-title');
+                        const newHeader = tempDiv.querySelector('.page-header-title');
+                        if (newHeader && newHeader.innerHTML) {
+                            pageHeader.innerHTML = newHeader.innerHTML;
+                        }
+                        
+                        loadAnalysisData(true).then(() => {
+                            renderChartsOnPage(path);
+                            
+                            requestAnimationFrame(function() {
+                                if (typeof window.categoryAnalysisInit === 'function') {
+                                    window.categoryAnalysisInit();
+                                }
+                                if (typeof window.productsInit === 'function') {
+                                    window.productsInit();
+                                }
+                                if (typeof window.priceBandInit === 'function') {
+                                    window.priceBandInit();
+                                }
+                                if (typeof window.uploadInit === 'function') {
+                                    window.uploadInit();
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        pageContent.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; min-height: 200px; color: #ef4444;">加载失败，请重试</div>';
+                    });
+            }
+
+            function renderChartsOnPage(path) {
+                const chartContainers = document.querySelectorAll('.chart-container');
+                let renderedCount = 0;
+                
+                if (chartContainers.length === 0) {
+                    return;
+                }
+                
+                chartContainers.forEach(container => {
+                    const containerId = container.id;
+                    if (containerId) {
+                        fetchChartData(path, containerId)
+                            .then(() => {
+                                renderedCount++;
+                            });
+                    }
+                });
+            }
+
+            async function fetchChartData(pagePath, chartId) {
+                try {
+                    const response = await fetch(`/api/chart-data?page=${encodeURIComponent(pagePath)}&chart=${chartId}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.chartData) {
+                        const chart = JSON.parse(data.chartData);
+                        const layout = chart.layout || {};
+                        layout.autosize = true;
+                        layout.width = null;
+                        layout.height = null;
+                        layout.margin = {
+                            l: 70,
+                            r: 70,
+                            t: 50,
+                            b: 70
+                        };
+                        layout.font = layout.font || {};
+                        layout.font.size = layout.font.size || 12;
+                        
+                        const container = document.getElementById(chartId);
+                        if (container) {
+                            Plotly.newPlot(chartId, chart.data, layout, {responsive: true});
+                        }
+                    }
+                } catch (error) {
+                    console.error('Fetch chart data error:', error);
+                }
+            }
+
+            function expandMenuByPath(path) {
+                const menuMap = {
+                    '/': 'overview',
+                    '/charts/quadrant': 'charts',
+                    '/charts/category': 'charts',
+                    '/charts/gpm': 'charts',
+                    '/charts/ctr-cvr': 'charts',
+                    '/charts/price-band': 'charts',
+                    '/products': 'data',
+                    '/category-analysis': 'data',
+                    '/upload': 'data',
+                    '/strategy': 'data'
+                };
+                
+                const menuName = menuMap[path];
+                if (menuName) {
+                    const subMenu = document.getElementById('submenu-' + menuName);
+                    const arrow = document.getElementById('arrow-' + menuName);
+                    if (subMenu && arrow) {
+                        const subMenuHeight = subMenu.querySelector('.subMenu').offsetHeight;
+                        subMenu.style.height = subMenuHeight + 'px';
+                        arrow.classList.add('expanded');
+                    }
+                }
+            }
+
+            function setActiveMenuItem(path) {
+                subMenuItems.forEach(function(el) {
+                    el.classList.remove('active');
+                });
+                const activeItem = document.querySelector(`.subMenuItem[data-href="${path}"]`);
+                if (activeItem) {
+                    activeItem.classList.add('active');
+                }
+            }
+
+            expandMenuByPath(currentPath);
+            setActiveMenuItem(currentPath);
+
+            window.addEventListener('popstate', function(e) {
+                if (e.state && e.state.path) {
+                    setActiveMenuItem(e.state.path);
+                    loadPageContent(e.state.path);
+                }
+            });
+        });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

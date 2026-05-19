@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}价格带分析 - 商品精细化运营数据分析平台{% endblock %}
+
+{% block page_title %}📊 价格带分析{% endblock %}
+
+{% block page_subtitle %}不同价格区间的流量与转化表现{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <label style="font-size: 0.75rem; color: var(--text-secondary);">一级类目：</label>
+        <select id="category-filter" style="padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-card); color: var(--text-primary); font-size: 0.75rem; cursor: pointer;">
+            <option value="all">全部类目</option>
+            {% for category in categories %}
+            <option value="{{ category }}">{{ category }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<div class="chart-grid">
+    <div class="chart-card chart-full">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>📊</span>
+                <span>价格带浏览转化率分析</span>
+            </h3>
+        </div>
+        <div id="price-band-chart" class="chart-container" style="height: 400px;"></div>
+    </div>
+</div>
+
+<div style="margin-top: 1rem;">
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>📋</span>
+                <span>价格带数据明细</span>
+            </h3>
+        </div>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">价格段</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">商品数</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">平均曝光</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">平均浏览</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">浏览/曝光</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">支付人数</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">转化率</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in price_band_data %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 0.5rem;">{{ item.price_band }}</td>
+                        <td style="text-align: right; padding: 0.5rem;">{{ item.product_count }}款</td>
+                        <td style="text-align: right; padding: 0.5rem;">{{ item.avg_exposure }}人</td>
+                        <td style="text-align: right; padding: 0.5rem;">{{ item.avg_browse }}人</td>
+                        <td style="text-align: right; padding: 0.5rem;">{{ item.browse_rate }}%</td>
+                        <td style="text-align: right; padding: 0.5rem;">{{ item.total_pay }}人</td>
+                        <td style="text-align: right; padding: 0.5rem;">{{ item.cvr }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function renderChart(divId, chartDataStr) {
+        try {
+            var chart = JSON.parse(chartDataStr);
+            var container = document.getElementById(divId);
+            if (!container) {
+                console.error('Container not found:', divId);
+                return;
+            }
+            
+            var data = chart.data || [];
+            var layout = chart.layout || {};
+            
+            layout.autosize = true;
+            layout.width = null;
+            layout.height = null;
+            
+            layout.margin = {
+                l: 80,
+                r: 80,
+                t: 70,
+                b: 70
+            };
+            layout.font = layout.font || {};
+            layout.font.size = layout.font.size || 11;
+            
+            Plotly.newPlot(divId, data, layout);
+        } catch (err) {
+            console.error('Error rendering chart', divId, err);
+        }
+    }
+    
+    function updatePriceBand(category) {
+        var chartContainer = document.getElementById('price-band-chart');
+        var tableContainer = document.querySelector('.chart-card table tbody');
+        
+        if (!chartContainer || !tableContainer) {
+            console.error('Containers not found');
+            return;
+        }
+        
+        fetch('/api/price-band?category=' + encodeURIComponent(category))
+            .then(response => response.json())
+            .then(data => {
+                if (!data || !data.chart) {
+                    return;
+                }
+                
+                renderChart('price-band-chart', data.chart);
+                
+                if (data.data && data.data.length > 0) {
+                    tableContainer.innerHTML = data.data.map(item => `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 0.5rem;">${item.price_band}</td>
+                            <td style="text-align: right; padding: 0.5rem;">${item.product_count}款</td>
+                            <td style="text-align: right; padding: 0.5rem;">${item.avg_exposure}人</td>
+                            <td style="text-align: right; padding: 0.5rem;">${item.avg_browse}人</td>
+                            <td style="text-align: right; padding: 0.5rem;">${item.browse_rate}%</td>
+                            <td style="text-align: right; padding: 0.5rem;">${item.total_pay}人</td>
+                            <td style="text-align: right; padding: 0.5rem;">${item.cvr}%</td>
+                        </tr>
+                    `).join('');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading price band data:', error);
+            });
+    }
+    
+    window.priceBandInit = function() {
+        var select = document.getElementById('category-filter');
+        if (select) {
+            select.onchange = function() {
+                updatePriceBand(this.value);
+            };
+        }
+    };
+    
+    window.onload = function() {
+        renderChart('price-band-chart', '{{ price_band_chart|safe }}');
+        window.priceBandInit();
+    };
+</script>
+{% endblock %}

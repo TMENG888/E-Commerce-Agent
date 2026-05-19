@@ -1,0 +1,554 @@
+{% extends "base.html" %}
+
+{% block title %}商品列表 - 商品精细化运营数据分析平台{% endblock %}
+
+{% block page_title %}📦 商品列表{% endblock %}
+
+{% block page_subtitle %}商品详细数据列表{% endblock %}
+
+{% block content %}
+<div class="chart-grid">
+    <div class="chart-card chart-full">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>📊</span>
+                <span>分类分布柱状图</span>
+            </h3>
+        </div>
+        <div id="category-chart" class="chart-container" style="height: 350px;"></div>
+    </div>
+</div>
+
+<div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <label style="font-size: 0.75rem; color: var(--text-secondary);">分类筛选：</label>
+        <select id="category-filter" style="padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-card); color: var(--text-primary); font-size: 0.75rem; cursor: pointer;">
+            <option value="all">全部</option>
+            <option value="超级爆款">超级爆款</option>
+            <option value="视觉黑马">视觉黑马</option>
+            <option value="封面杀手">封面杀手</option>
+            <option value="转化陷阱">转化陷阱</option>
+            <option value="冷门精品">冷门精品</option>
+            <option value="待清理垃圾">待清理垃圾</option>
+        </select>
+        <button id="copy-ids-btn" style="padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-card); color: var(--text-primary); font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.375rem;" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span id="copy-btn-text">复制商品ID</span>
+        </button>
+        <span id="copy-success" style="display: none; font-size: 0.7rem; color: var(--accent-green);">✓ 已复制</span>
+    </div>
+</div>
+
+<div class="chart-card">
+    <div style="overflow-x: auto;">
+        <table id="products-table" style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">商品名称</th>
+                    <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">价格</th>
+                    <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">曝光人数</th>
+                    <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">浏览人数</th>
+                    <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">支付人数</th>
+                    <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">CTR</th>
+                    <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">CVR</th>
+                    <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">分类</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr style="border-bottom: 1px solid var(--border-color);" data-category="{{ product.category }}">
+                    <td style="padding: 0.5rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ product.name }}</td>
+                    <td style="text-align: right; padding: 0.5rem;">¥{{ product.price }}</td>
+                    <td style="text-align: right; padding: 0.5rem;">{{ product.exposure }}</td>
+                    <td style="text-align: right; padding: 0.5rem;">{{ product.browse }}</td>
+                    <td style="text-align: right; padding: 0.5rem;">{{ product.pay }}</td>
+                    <td style="text-align: right; padding: 0.5rem;">{{ product.ctr }}%</td>
+                    <td style="text-align: right; padding: 0.5rem;">{{ product.cvr }}%</td>
+                    <td style="text-align: right; padding: 0.5rem;">{{ product.category }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+    <ul class="ant-pagination ant-table-pagination ant-table-pagination-right" id="pagination">
+        <li title="上一页" class="ant-pagination-prev {% if current_page <= 1 %}ant-pagination-disabled{% endif %}" aria-disabled="{{ current_page <= 1 }}">
+            <a href="javascript:void(0)" class="ant-pagination-item-link" data-page="{{ current_page - 1 }}" {% if current_page <= 1 %}tabindex="-1"{% endif %}>
+                <span role="img" aria-label="left" class="anticon anticon-left">
+                    <svg viewBox="64 64 896 896" focusable="false" data-icon="left" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                        <path d="M724 218.3V141c0-6.7-7.7-10.4-12.9-6.3L260.3 486.8a31.86 31.86 0 000 50.3l450.8 352.1c5.3 4.1 12.9.4 12.9-6.3v-77.3c0-4.9-2.3-9.6-6.1-12.6l-360-281 360-281.1c3.8-3 6.1-7.7 6.1-12.6z"></path>
+                    </svg>
+                </span>
+            </a>
+        </li>
+        
+        {% if total_pages <= 7 %}
+            {% for p in range(1, total_pages + 1) %}
+            <li title="{{ p }}" class="ant-pagination-item ant-pagination-item-{{ p }} {% if p == current_page %}ant-pagination-item-active{% endif %}" tabindex="0">
+                <a href="javascript:void(0)" data-page="{{ p }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+        {% else %}
+            {% if current_page <= 5 %}
+                {% for p in range(1, 6) %}
+                <li title="{{ p }}" class="ant-pagination-item ant-pagination-item-{{ p }} {% if p == current_page %}ant-pagination-item-active{% endif %}" tabindex="0">
+                    <a href="javascript:void(0)" data-page="{{ p }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                <li class="ant-pagination-item ant-pagination-item-jump" title="更多">
+                    <a href="javascript:void(0)" data-page="{{ current_page + 3 }}">...</a>
+                </li>
+                <li title="{{ total_pages }}" class="ant-pagination-item ant-pagination-item-{{ total_pages }}">
+                    <a href="javascript:void(0)" data-page="{{ total_pages }}">{{ total_pages }}</a>
+                </li>
+            {% elif current_page >= total_pages - 4 %}
+                <li title="1" class="ant-pagination-item ant-pagination-item-1">
+                    <a href="javascript:void(0)" data-page="1">1</a>
+                </li>
+                <li class="ant-pagination-item ant-pagination-item-jump" title="更多">
+                    <a href="javascript:void(0)" data-page="{{ total_pages - 9 }}">...</a>
+                </li>
+                {% for p in range(total_pages - 5, total_pages + 1) %}
+                <li title="{{ p }}" class="ant-pagination-item ant-pagination-item-{{ p }} {% if p == current_page %}ant-pagination-item-active{% endif %}" tabindex="0">
+                    <a href="javascript:void(0)" data-page="{{ p }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+            {% else %}
+                <li title="1" class="ant-pagination-item ant-pagination-item-1">
+                    <a href="javascript:void(0)" data-page="1">1</a>
+                </li>
+                <li class="ant-pagination-item ant-pagination-item-jump" title="更多">
+                    <a href="javascript:void(0)" data-page="{{ current_page - 3 }}">...</a>
+                </li>
+                {% for p in range(current_page - 2, current_page + 3) %}
+                <li title="{{ p }}" class="ant-pagination-item ant-pagination-item-{{ p }} {% if p == current_page %}ant-pagination-item-active{% endif %}" tabindex="0">
+                    <a href="javascript:void(0)" data-page="{{ p }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                <li class="ant-pagination-item ant-pagination-item-jump" title="更多">
+                    <a href="javascript:void(0)" data-page="{{ current_page + 3 }}">...</a>
+                </li>
+                <li title="{{ total_pages }}" class="ant-pagination-item ant-pagination-item-{{ total_pages }}">
+                    <a href="javascript:void(0)" data-page="{{ total_pages }}">{{ total_pages }}</a>
+                </li>
+            {% endif %}
+        {% endif %}
+        
+        <li title="下一页" class="ant-pagination-next {% if current_page >= total_pages %}ant-pagination-disabled{% endif %}" aria-disabled="{{ current_page >= total_pages }}">
+            <a href="javascript:void(0)" class="ant-pagination-item-link" data-page="{{ current_page + 1 }}" {% if current_page >= total_pages %}tabindex="-1"{% endif %}>
+                <span role="img" aria-label="right" class="anticon anticon-right">
+                    <svg viewBox="64 64 896 896" focusable="false" data-icon="right" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                        <path d="M765.7 486.8L314.9 134.7A7.97 7.97 0 00302 141v77.3c0 4.9 2.3 9.6 6.1 12.6l360 281.1-360 281.1c-3.9 3-6.1 7.7-6.1 12.6V883c0 6.7 7.7 10.4 12.9 6.3l450.8-352.1a31.96 31.96 0 000-50.4z"></path>
+                    </svg>
+                </span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<style>
+    .ant-pagination {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+        border-radius: 6px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        list-style: none;
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .ant-pagination li {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 2px;
+    }
+
+    .ant-pagination-item-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary);
+        text-decoration: none;
+        border: none;
+        background: transparent;
+    }
+
+    .ant-pagination-item-link:hover:not(:disabled) {
+        background: rgba(0, 0, 0, 0.04);
+        color: var(--text-primary);
+    }
+
+    .ant-pagination-item {
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .ant-pagination-item a {
+        display: block;
+        width: 100%;
+        height: 100%;
+        text-decoration: none;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .ant-pagination-item:hover:not(.ant-pagination-item-active) a {
+        color: var(--accent-blue);
+    }
+
+    .ant-pagination-item-active {
+        background: var(--accent-blue);
+        border-color: var(--accent-blue);
+    }
+
+    .ant-pagination-item-active a {
+        color: #fff;
+        font-weight: 500;
+    }
+
+    .ant-pagination-prev,
+    .ant-pagination-next {
+        margin: 0 4px;
+    }
+
+    .ant-pagination-disabled .ant-pagination-item-link {
+        cursor: not-allowed;
+        color: var(--text-muted);
+        opacity: 0.5;
+    }
+
+    .ant-pagination-disabled:hover .ant-pagination-item-link {
+        background: transparent;
+    }
+
+    .ant-pagination-jump-prev,
+    .ant-pagination-jump-next {
+        margin: 0 2px;
+    }
+
+    .ant-pagination-jump-prev .ant-pagination-item-link,
+    .ant-pagination-jump-next .ant-pagination-item-link {
+        width: 28px;
+        height: 28px;
+    }
+
+    .ant-pagination-item-jump {
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        color: var(--text-secondary);
+        pointer-events: none;
+    }
+
+    .anticon {
+        display: inline-block;
+        line-height: 1;
+        width: 1em;
+        height: 1em;
+    }
+
+    .anticon svg {
+        display: block;
+    }
+</style>
+
+<script>
+    var currentPageNum = {{ current_page }};
+    var totalPagesNum = {{ total_pages }};
+
+    function renderChart(divId, chartDataStr) {
+        try {
+            var chart = JSON.parse(chartDataStr);
+            var container = document.getElementById(divId);
+            if (!container) {
+                console.error('Container not found:', divId);
+                return;
+            }
+            
+            var data = chart.data || [];
+            var layout = chart.layout || {};
+            
+            layout.autosize = true;
+            layout.width = null;
+            layout.height = null;
+            
+            layout.margin = layout.margin || {};
+            layout.margin.l = layout.margin.l || 50;
+            layout.margin.r = layout.margin.r || 50;
+            layout.margin.t = layout.margin.t || 40;
+            layout.margin.b = layout.margin.b || 40;
+            
+            layout.font = layout.font || {};
+            layout.font.size = layout.font.size || 10;
+            
+            Plotly.newPlot(divId, data, layout);
+        } catch (err) {
+            console.error('Error rendering chart', divId, err);
+        }
+    }
+
+    function loadProducts(page, category) {
+        var tableBody = document.querySelector('#products-table tbody');
+        var pagination = document.getElementById('pagination');
+        
+        tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">加载中...</td></tr>';
+        
+        fetch('/api/products?page=' + page + '&category=' + encodeURIComponent(category))
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success) {
+                    tableBody.innerHTML = '';
+                    
+                    if (data.products.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">暂无数据</td></tr>';
+                        return;
+                    }
+                    
+                    data.products.forEach(function(product) {
+                        var row = document.createElement('tr');
+                        row.setAttribute('data-category', product.category);
+                        row.style.borderBottom = '1px solid var(--border-color)';
+                        
+                        row.innerHTML = `
+                            <td style="padding: 0.5rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.name}</td>
+                            <td style="text-align: right; padding: 0.5rem;">¥${product.price}</td>
+                            <td style="text-align: right; padding: 0.5rem;">${product.exposure}</td>
+                            <td style="text-align: right; padding: 0.5rem;">${product.browse}</td>
+                            <td style="text-align: right; padding: 0.5rem;">${product.pay}</td>
+                            <td style="text-align: right; padding: 0.5rem;">${product.ctr}%</td>
+                            <td style="text-align: right; padding: 0.5rem;">${product.cvr}%</td>
+                            <td style="text-align: right; padding: 0.5rem;">${product.category}</td>
+                        `;
+                        
+                        tableBody.appendChild(row);
+                    });
+                    
+                    currentPageNum = data.current_page;
+                    totalPagesNum = data.total_pages;
+                    
+                    updatePaginationUI(currentPageNum, totalPagesNum);
+                    
+                    var urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('page', currentPageNum);
+                    history.pushState({page: currentPageNum}, '', window.location.pathname + '?' + urlParams.toString());
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #ef4444;">加载失败</td></tr>';
+                }
+            })
+            .catch(function(error) {
+                console.error('Error loading products:', error);
+                tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #ef4444;">加载失败: ' + error.message + '</td></tr>';
+            });
+    }
+
+    function generatePageNumbers(page, total) {
+        var pagination = document.getElementById('pagination');
+        if (!pagination) return '';
+        
+        var prevLi = pagination.querySelector('.ant-pagination-prev');
+        var nextLi = pagination.querySelector('.ant-pagination-next');
+        
+        var pageNumbersHTML = '';
+        
+        if (total <= 7) {
+            for (var p = 1; p <= total; p++) {
+                pageNumbersHTML += `<li title="${p}" class="ant-pagination-item ant-pagination-item-${p} ${p === page ? 'ant-pagination-item-active' : ''}" tabindex="0">
+                    <a href="javascript:void(0)" data-page="${p}">${p}</a>
+                </li>`;
+            }
+        } else {
+            if (page <= 5) {
+                for (var p = 1; p <= 5; p++) {
+                    pageNumbersHTML += `<li title="${p}" class="ant-pagination-item ant-pagination-item-${p} ${p === page ? 'ant-pagination-item-active' : ''}" tabindex="0">
+                        <a href="javascript:void(0)" data-page="${p}">${p}</a>
+                    </li>`;
+                }
+                pageNumbersHTML += `<li class="ant-pagination-item ant-pagination-item-jump" title="更多">
+                    <a href="javascript:void(0)" data-page="${page + 3}">...</a>
+                </li>`;
+                pageNumbersHTML += `<li title="${total}" class="ant-pagination-item ant-pagination-item-${total}">
+                    <a href="javascript:void(0)" data-page="${total}">${total}</a>
+                </li>`;
+            } else if (page >= total - 4) {
+                pageNumbersHTML += `<li title="1" class="ant-pagination-item ant-pagination-item-1">
+                    <a href="javascript:void(0)" data-page="1">1</a>
+                </li>`;
+                pageNumbersHTML += `<li class="ant-pagination-item ant-pagination-item-jump" title="更多">
+                    <a href="javascript:void(0)" data-page="${total - 9}">...</a>
+                </li>`;
+                for (var p = total - 5; p <= total; p++) {
+                    pageNumbersHTML += `<li title="${p}" class="ant-pagination-item ant-pagination-item-${p} ${p === page ? 'ant-pagination-item-active' : ''}" tabindex="0">
+                        <a href="javascript:void(0)" data-page="${p}">${p}</a>
+                    </li>`;
+                }
+            } else {
+                pageNumbersHTML += `<li title="1" class="ant-pagination-item ant-pagination-item-1">
+                    <a href="javascript:void(0)" data-page="1">1</a>
+                </li>`;
+                pageNumbersHTML += `<li class="ant-pagination-item ant-pagination-item-jump" title="更多">
+                    <a href="javascript:void(0)" data-page="${page - 3}">...</a>
+                </li>`;
+                for (var p = page - 2; p <= page + 2; p++) {
+                    pageNumbersHTML += `<li title="${p}" class="ant-pagination-item ant-pagination-item-${p} ${p === page ? 'ant-pagination-item-active' : ''}" tabindex="0">
+                        <a href="javascript:void(0)" data-page="${p}">${p}</a>
+                    </li>`;
+                }
+                pageNumbersHTML += `<li class="ant-pagination-item ant-pagination-item-jump" title="更多">
+                    <a href="javascript:void(0)" data-page="${page + 3}">...</a>
+                </li>`;
+                pageNumbersHTML += `<li title="${total}" class="ant-pagination-item ant-pagination-item-${total}">
+                    <a href="javascript:void(0)" data-page="${total}">${total}</a>
+                </li>`;
+            }
+        }
+        
+        prevLi.insertAdjacentHTML('afterend', pageNumbersHTML);
+    }
+    
+    function updatePaginationUI(page, total) {
+        var pagination = document.getElementById('pagination');
+        if (!pagination) return;
+        
+        var prevLi = pagination.querySelector('.ant-pagination-prev');
+        var nextLi = pagination.querySelector('.ant-pagination-next');
+        
+        var itemsToRemove = pagination.querySelectorAll('.ant-pagination-item, .ant-pagination-item-jump');
+        itemsToRemove.forEach(function(item) {
+            item.remove();
+        });
+        
+        var allLi = pagination.querySelectorAll('li');
+        allLi.forEach(function(item) {
+            var classes = item.getAttribute('class') || '';
+            if (!classes.includes('ant-pagination-prev') && !classes.includes('ant-pagination-next')) {
+                item.remove();
+            }
+        });
+        
+        generatePageNumbers(page, total);
+        
+        if (prevLi) {
+            var prevLink = prevLi.querySelector('a');
+            if (page <= 1) {
+                prevLi.classList.add('ant-pagination-disabled');
+                prevLi.setAttribute('aria-disabled', 'true');
+                if (prevLink) prevLink.setAttribute('tabindex', '-1');
+            } else {
+                prevLi.classList.remove('ant-pagination-disabled');
+                prevLi.setAttribute('aria-disabled', 'false');
+                if (prevLink) prevLink.removeAttribute('tabindex');
+            }
+            if (prevLink) prevLink.setAttribute('data-page', page - 1);
+        }
+        
+        if (nextLi) {
+            var nextLink = nextLi.querySelector('a');
+            if (page >= total) {
+                nextLi.classList.add('ant-pagination-disabled');
+                nextLi.setAttribute('aria-disabled', 'true');
+                if (nextLink) nextLink.setAttribute('tabindex', '-1');
+            } else {
+                nextLi.classList.remove('ant-pagination-disabled');
+                nextLi.setAttribute('aria-disabled', 'false');
+                if (nextLink) nextLink.removeAttribute('tabindex');
+            }
+            if (nextLink) nextLink.setAttribute('data-page', page + 1);
+        }
+    }
+
+    window.productsInit = function() {
+        var filter = document.getElementById('category-filter');
+        var pagination = document.getElementById('pagination');
+        var copyBtn = document.getElementById('copy-ids-btn');
+        var copySuccess = document.getElementById('copy-success');
+        
+        if (!filter || !pagination) {
+            console.log('products elements not found');
+            return;
+        }
+        
+        filter.onchange = function() {
+            var selectedCategory = this.value;
+            console.log('Category filter changed to:', selectedCategory);
+            loadProducts(1, selectedCategory);
+            
+            copyBtn.disabled = false;
+        };
+        
+        pagination.onclick = function(e) {
+            var target = e.target.closest('a');
+            if (!target) return;
+            
+            e.preventDefault();
+            
+            var page = parseInt(target.getAttribute('data-page'));
+            if (isNaN(page) || page < 1 || page > totalPagesNum) return;
+            
+            var selectedCategory = filter.value;
+            loadProducts(page, selectedCategory);
+        };
+        
+        copyBtn.onclick = function() {
+            var selectedCategory = filter.value;
+            var categoryLabel = selectedCategory === 'all' ? '全部' : selectedCategory;
+            
+            fetch('/api/products/ids?category=' + encodeURIComponent(selectedCategory))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.ids_string) {
+                        navigator.clipboard.writeText(data.ids_string).then(() => {
+                            copySuccess.style.display = 'inline';
+                            setTimeout(() => {
+                                copySuccess.style.display = 'none';
+                            }, 2000);
+                        }).catch(err => {
+                            console.error('复制失败:', err);
+                            alert('复制失败，请手动复制');
+                        });
+                    } else {
+                        alert('暂无商品数据');
+                    }
+                })
+                .catch(error => {
+                    console.error('获取商品ID失败:', error);
+                    alert('获取商品ID失败');
+                });
+        };
+        
+        copyBtn.disabled = false;
+    };
+    
+    function initProductsPage() {
+        renderChart('category-chart', '{{ category_chart|safe }}');
+        window.productsInit();
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initProductsPage);
+    } else {
+        initProductsPage();
+    }
+</script>
+{% endblock %}

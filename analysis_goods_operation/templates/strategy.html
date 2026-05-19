@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}策略说明 - 商品精细化运营数据分析平台{% endblock %}
+
+{% block page_title %}📚 策略说明{% endblock %}
+
+{% block page_subtitle %}商品精细化运营分析策略与方法论{% endblock %}
+
+{% block content %}
+<div class="chart-card">
+    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">🎯 六维分类策略</h3>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem;">
+        <div style="padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+            <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #10B981;">👑 超级爆款</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">高曝光 + 高点击 + 高转化。店铺的"印钞机"，防守策略：维持库存，拉高单价测试利润上限。</p>
+        </div>
+        <div style="padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: var(--radius-md);">
+            <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #8B5CF6;">🦄 视觉黑马</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">低曝光 + 极高点击 + 高转化。被算法低估的明珠，进攻策略：加大引流词，手动"擦亮"，付费买流量。</p>
+        </div>
+        <div style="padding: 1rem; background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-md);">
+            <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #F59E0B;">🎭 封面杀手</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">高曝光 + 极低点击。标题/主图是垃圾，重塑策略：立即换图，尝试实拍图或标注"包邮"、"99新"。</p>
+        </div>
+        <div style="padding: 1rem; background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md);">
+            <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #EF4444;">🕳️ 转化陷阱</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">高流量 + 零转化。"虚假繁荣"，复盘策略：检查差评，询问客服询单未成交原因。</p>
+        </div>
+        <div style="padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-md);">
+            <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #3B82F6;">💎 冷门精品</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">低曝光 + 低点击 + 极高转化。窄众刚需，收割策略：流量虽小但精准，保持挂机无需干预。</p>
+        </div>
+        <div style="padding: 1rem; background: rgba(107, 114, 128, 0.1); border-radius: var(--radius-md);">
+            <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #6B7280;">🗑️ 待清理垃圾</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">低曝光 + 低点击 + 低转化。占用坑位的无效链接，止损策略：累计14天无变动则直接删除。</p>
+        </div>
+    </div>
+
+    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">📊 分析指标说明</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">指标</th>
+                <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">计算公式</th>
+                <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">说明</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;">日均曝光</td>
+                <td style="padding: 0.5rem;">商品曝光人数 / min(上架天数, 7)</td>
+                <td style="padding: 0.5rem;">按上架天数标准化后的日均曝光量</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;">标准化CTR</td>
+                <td style="padding: 0.5rem;">日均浏览 / 日均曝光 × 100%</td>
+                <td style="padding: 0.5rem;">衡量商品吸引用户点击的能力</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;">标准化CVR</td>
+                <td style="padding: 0.5rem;">日均支付 / 日均浏览 × 100%</td>
+                <td style="padding: 0.5rem;">衡量商品将流量转化为订单的能力</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;">GPM (千次曝光成交)</td>
+                <td style="padding: 0.5rem;">销售额 / 曝光人数 × 1000</td>
+                <td style="padding: 0.5rem;">衡量流量变现效率</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 style="font-size: 1rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 1rem; color: var(--text-primary);">💡 运营优先级建议</h3>
+    <ul style="font-size: 0.8125rem; color: var(--text-secondary); list-style: none; display: flex; flex-direction: column; gap: 0.75rem;">
+        <li style="display: flex; gap: 0.5rem;">
+            <span style="width: 1.5rem; height: 1.5rem; background: #EF4444; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0;">1</span>
+            <span><strong>转化陷阱</strong> - 立即复盘：用户点击进来却不买，优先检查差评或询单未成交原因</span>
+        </li>
+        <li style="display: flex; gap: 0.5rem;">
+            <span style="width: 1.5rem; height: 1.5rem; background: #8B5CF6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0;">2</span>
+            <span><strong>视觉黑马</strong> - 进攻扩产：点击率远超均值，立即加大引流词，手动"擦亮"</span>
+        </li>
+        <li style="display: flex; gap: 0.5rem;">
+            <span style="width: 1.5rem; height: 1.5rem; background: #F59E0B; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0;">3</span>
+            <span><strong>封面杀手</strong> - 提效优化：曝光高但点击低，优先更换主图，尝试实拍图</span>
+        </li>
+        <li style="display: flex; gap: 0.5rem;">
+            <span style="width: 1.5rem; height: 1.5rem; background: #10B981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0;">4</span>
+            <span><strong>超级爆款</strong> - 防守维持：保持库存稳定，测试价格上限，保护核心利润</span>
+        </li>
+        <li style="display: flex; gap: 0.5rem;">
+            <span style="width: 1.5rem; height: 1.5rem; background: #3B82F6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0;">5</span>
+            <span><strong>冷门精品</strong> - 自然收割：流量虽小但精准，保持挂机无需过多干预</span>
+        </li>
+        <li style="display: flex; gap: 0.5rem;">
+            <span style="width: 1.5rem; height: 1.5rem; background: #6B7280; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0;">6</span>
+            <span><strong>待清理垃圾</strong> - 果断止损：累计14天无变动直接删除，释放店铺权重</span>
+        </li>
+    </ul>
+
+    <h3 style="font-size: 1rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 1rem; color: var(--text-primary);">📈 核心判定逻辑</h3>
+    <div style="padding: 1rem; background: var(--bg-card); border-radius: var(--radius-md); font-size: 0.75rem; color: var(--text-secondary);">
+        <p style="margin-bottom: 0.5rem;"><strong>判定基准：</strong></p>
+        <ul style="list-style: disc; padding-left: 1.5rem; margin-bottom: 0.5rem;">
+            <li>曝光中位数：所有商品日均曝光的中位数作为高低曝光分界</li>
+            <li>CTR均值：所有商品标准化CTR的平均值</li>
+            <li>CVR均值：所有商品标准化CVR的平均值</li>
+            <li>CTR高阈值：CTR均值 × 1.5</li>
+            <li>CVR高阈值：CVR均值 × 1.5</li>
+            <li>CTR低阈值：CTR均值 × 0.3</li>
+            <li>CVR低阈值：CVR均值 × 0.3</li>
+        </ul>
+        <p style="margin-top: 0.5rem;"><strong>判定优先级：</strong>转化陷阱（支付人数==0且日均浏览&gt;10）→ 超级爆款 → 视觉黑马 → 封面杀手 → 冷门精品 → 待清理垃圾</p>
+    </div>
+</div>
+{% endblock %}

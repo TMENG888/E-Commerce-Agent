@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}数据仪表盘 - 商品精细化运营数据分析平台{% endblock %}
+
+{% block page_title %}📊 数据仪表盘{% endblock %}
+
+{% block page_subtitle %}基于流量效率、转化瓶颈、利润贡献的商品全生命周期健康诊断{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn-primary" onclick="refreshData()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>
+    </svg>
+    刷新数据
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-card-header">
+            <span class="kpi-card-title">商品总数</span>
+            <div class="kpi-card-icon blue">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="kpi-card-value">{{ kpi.total_products }}</div>
+        <div class="kpi-card-subtitle">款商品</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-card-header">
+            <span class="kpi-card-title">总曝光人数</span>
+            <div class="kpi-card-icon purple">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+            </div>
+        </div>
+        <div class="kpi-card-value">{{ kpi.total_exposure }}</div>
+        <div class="kpi-card-subtitle">人次曝光</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-card-header">
+            <span class="kpi-card-title">总浏览人数</span>
+            <div class="kpi-card-icon blue">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+            </div>
+        </div>
+        <div class="kpi-card-value">{{ kpi.total_browse }}</div>
+        <div class="kpi-card-subtitle">人次浏览</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-card-header">
+            <span class="kpi-card-title">总支付人数</span>
+            <div class="kpi-card-icon green">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/>
+                </svg>
+            </div>
+        </div>
+        <div class="kpi-card-value">{{ kpi.total_pay }}</div>
+        <div class="kpi-card-subtitle">人次购买</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-card-header">
+            <span class="kpi-card-title">平均CTR</span>
+            <div class="kpi-card-icon orange">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+            </div>
+        </div>
+        <div class="kpi-card-value">{{ kpi.avg_ctr }}%</div>
+        <div class="kpi-card-subtitle">浏览转化率</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-card-header">
+            <span class="kpi-card-title">平均CVR</span>
+            <div class="kpi-card-icon green">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+                </svg>
+            </div>
+        </div>
+        <div class="kpi-card-value">{{ kpi.avg_cvr }}%</div>
+        <div class="kpi-card-subtitle">购买转化率</div>
+    </div>
+</div>
+
+<div class="chart-grid">
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>📈</span>
+                <span>商品分类分布</span>
+            </h3>
+            <a href="/charts/category" class="chart-card-link">
+                查看详情
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </a>
+        </div>
+        <div id="category-chart" class="chart-container" style="height: 200px;"></div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>💰</span>
+                <span>GPM排行榜</span>
+            </h3>
+            <a href="/charts/gpm" class="chart-card-link">
+                查看详情
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </a>
+        </div>
+        <div id="top-gpm-chart" class="chart-container" style="height: 200px;"></div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>📊</span>
+                <span>价格带分析</span>
+            </h3>
+            <a href="/charts/price-band" class="chart-card-link">
+                查看详情
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </a>
+        </div>
+        <div id="price-band-chart" class="chart-container" style="height: 200px;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function renderChart(divId, chartDataStr) {
+        try {
+            var chart = JSON.parse(chartDataStr);
+            var container = document.getElementById(divId);
+            if (!container) {
+                console.error('Container not found:', divId);
+                return;
+            }
+            
+            var data = chart.data || [];
+            var layout = chart.layout || {};
+            
+            layout.autosize = true;
+            layout.width = null;
+            layout.height = null;
+            
+            layout.margin = layout.margin || {};
+            layout.margin.l = layout.margin.l || 50;
+            layout.margin.r = layout.margin.r || 50;
+            layout.margin.t = layout.margin.t || 40;
+            layout.margin.b = layout.margin.b || 40;
+            
+            layout.font = layout.font || {};
+            layout.font.size = layout.font.size || 10;
+            
+            Plotly.newPlot(divId, data, layout);
+        } catch (err) {
+            console.error('Error rendering chart', divId, err);
+        }
+    }
+
+    window.onload = function() {
+        renderChart('category-chart', '{{ category_chart|safe }}');
+        renderChart('top-gpm-chart', '{{ top_gpm_chart|safe }}');
+        renderChart('ctr-cvr-chart', '{{ ctr_cvr_chart|safe }}');
+        renderChart('price-band-chart', '{{ price_band_chart|safe }}');
+    };
+
+    function refreshData() {
+        fetch('/api/refresh')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('刷新失败，请重试');
+                }
+            });
+    }
+</script>
+{% endblock %}

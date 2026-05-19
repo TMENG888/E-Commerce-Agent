@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}分类分布 - 商品精细化运营数据分析平台{% endblock %}
+
+{% block page_title %}📈 商品分类分布{% endblock %}
+
+{% block page_subtitle %}各分类商品数量统计{% endblock %}
+
+{% block content %}
+<div class="chart-grid">
+    <div class="chart-card chart-full">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>📊</span>
+                <span>分类分布柱状图</span>
+            </h3>
+        </div>
+        <div id="category-chart" class="chart-container" style="height: 350px;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function renderChart(divId, chartDataStr) {
+        try {
+            var chart = JSON.parse(chartDataStr);
+            var container = document.getElementById(divId);
+            if (!container) {
+                console.error('Container not found:', divId);
+                return;
+            }
+            
+            var data = chart.data || [];
+            var layout = chart.layout || {};
+            
+            layout.autosize = true;
+            layout.width = null;
+            layout.height = null;
+            
+            layout.margin = layout.margin || {};
+            layout.margin.l = layout.margin.l || 50;
+            layout.margin.r = layout.margin.r || 50;
+            layout.margin.t = layout.margin.t || 40;
+            layout.margin.b = layout.margin.b || 40;
+            
+            layout.font = layout.font || {};
+            layout.font.size = layout.font.size || 10;
+            
+            Plotly.newPlot(divId, data, layout);
+        } catch (err) {
+            console.error('Error rendering chart', divId, err);
+        }
+    }
+
+    window.onload = function() {
+        renderChart('category-chart', '{{ category_chart|safe }}');
+    };
+</script>
+{% endblock %}

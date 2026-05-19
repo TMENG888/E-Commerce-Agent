@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}四象限分类图 - 商品精细化运营数据分析平台{% endblock %}
+
+{% block page_title %}🎯 四象限分类图{% endblock %}
+
+{% block page_subtitle %}基于曝光和转化的商品分类分析{% endblock %}
+
+{% block content %}
+<div class="chart-grid">
+    <div class="chart-card chart-full">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>📊</span>
+                <span>商品四象限分布图</span>
+            </h3>
+        </div>
+        <div id="quadrant-chart" class="chart-container" style="height: 450px;"></div>
+    </div>
+
+    <div class="chart-card chart-half">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>📈</span>
+                <span>分类统计</span>
+            </h3>
+        </div>
+        <div id="category-pie-chart" class="chart-container" style="height: 250px;"></div>
+    </div>
+
+    <div class="chart-card chart-half">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <span>📋</span>
+                <span>分类详情</span>
+            </h3>
+        </div>
+        <div id="category-table" style="height: 250px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">分类</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">数量</th>
+                        <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">占比</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in category_stats %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 0.5rem;">{{ item.name }}</td>
+                        <td style="text-align: right; padding: 0.5rem;">{{ item.count }}</td>
+                        <td style="text-align: right; padding: 0.5rem;">{{ item.percentage }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function renderChart(divId, chartDataStr) {
+        try {
+            var chart = JSON.parse(chartDataStr);
+            var container = document.getElementById(divId);
+            if (!container) {
+                console.error('Container not found:', divId);
+                return;
+            }
+            
+            var data = chart.data || [];
+            var layout = chart.layout || {};
+            
+            layout.autosize = true;
+            layout.width = null;
+            layout.height = null;
+            
+            layout.margin = layout.margin || {};
+            layout.margin.l = layout.margin.l || 50;
+            layout.margin.r = layout.margin.r || 50;
+            layout.margin.t = layout.margin.t || 40;
+            layout.margin.b = layout.margin.b || 40;
+            
+            layout.font = layout.font || {};
+            layout.font.size = layout.font.size || 10;
+            
+            Plotly.newPlot(divId, data, layout);
+        } catch (err) {
+            console.error('Error rendering chart', divId, err);
+        }
+    }
+
+    window.onload = function() {
+        renderChart('quadrant-chart', '{{ quadrant_chart|safe }}');
+        renderChart('category-pie-chart', '{{ category_pie_chart|safe }}');
+    };
+</script>
+{% endblock %}

@@ -1,0 +1,5 @@
+- [x] Checkpoint 1: upload.html 中已定义 `uploadInit` 函数
+- [x] Checkpoint 2: `uploadInit` 函数包含事件监听器设置逻辑
+- [x] Checkpoint 3: upload.html 脚本结构支持 AJAX 导航加载
+- [x] Checkpoint 4: 从首页刷新后导航到 upload 页面，周期选择器可正常切换
+- [x] Checkpoint 5: 选择器切换后隐藏字段值正确更新

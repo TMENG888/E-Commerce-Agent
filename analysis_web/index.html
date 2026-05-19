@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电商爆款选品分析决策系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/flatpickr/4.6.13/l10n/zh.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-left">
+                <div class="nav-brand">
+                    <span class="brand-icon">💎</span>
+                    <span class="brand-text">选品分析决策系统</span>
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link active" id="nav-home">
+                        <i class="fas fa-chart-line"></i>
+                        <span>选品中心</span>
+                    </a>
+                    <a href="favorites.html" class="nav-link" id="nav-favorites">
+                        <i class="fas fa-heart"></i>
+                        <span>我的收藏</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="controls-section">
+            <div class="control-group">
+                <label><i class="fas fa-calendar-alt" style="margin-right: 6px;"></i>采集日期</label>
+                <input type="text" id="date-picker" placeholder="选择采集日期">
+            </div>
+            <div class="control-group">
+                <label><i class="fas fa-tags" style="margin-right: 6px;"></i>品类关键词</label>
+                <select id="category-select">
+                    <option value="">-- 请选择品类 --</option>
+                </select>
+            </div>
+            <div class="control-group" style="flex: 0; min-width: auto;">
+                <label>&nbsp;</label>
+                <button class="search-btn" id="search-btn" onclick="searchData()">
+                    <i class="fas fa-search"></i>
+                    开始分析
+                </button>
+            </div>
+            <div class="control-group" style="flex: 0; min-width: auto;">
+                <label>&nbsp;</label>
+                <button class="export-btn disabled" id="export-btn" onclick="exportData()" disabled>
+                    <i class="fas fa-file-export"></i>
+                    导出数据
+                </button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在分析数据，请稍候...</p>
+        </div>
+
+        <div class="results-section" id="results-section" style="display: none;">
+            <div class="summary-info" id="summary-info"></div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>商品描述</th>
+                            <th>价格</th>
+                            <th>想要人数</th>
+                            <th>浏览量</th>
+                            <th>转化率</th>
+                            <th>选品指数</th>
+                            <th>商品链接</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- 数据行将在这里动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-controls" id="pagination-controls" style="display: none;">
+                <div class="pagination-info" id="pagination-info"></div>
+                <div class="pagination-buttons" id="pagination-buttons"></div>
+                <div class="pagination-jump">
+                    <span>跳至</span>
+                    <input type="number" id="jump-page" min="1" value="1">
+                    <span>页</span>
+                    <button onclick="jumpToPage()">确定</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="no-data" id="no-data" style="display: none;">
+            <div class="no-data-icon">📊</div>
+            <h3>暂无数据</h3>
+            <p>请检查采集日期和品类关键词是否正确</p>
+        </div>
+
+        <footer>
+            <p>© 2024 商品热度分析系统 · 数据驱动决策</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

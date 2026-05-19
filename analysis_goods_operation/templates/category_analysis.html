@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}类目分析 - 商品精细化运营数据分析平台{% endblock %}
+
+{% block page_title %}🏷️ 类目分析{% endblock %}
+
+{% block page_subtitle %}各分类下四级类目分布分析{% endblock %}
+
+{% block content %}
+<div class="chart-card">
+    <div style="margin-bottom: 1rem;">
+        <label style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); margin-right: 0.75rem;">选择分类：</label>
+        <select id="category-filter" style="padding: 0.5rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: 0.875rem;">
+            {% for opt in categories %}
+            <option value="{{ opt.value }}" {% if opt.selected %}selected{% endif %}>{{ opt.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div id="category-table-container">
+        <h3 style="font-size: 0.9375rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">{{ current_category_label }} - 四级类目分布</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">四级类目</th>
+                    <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">商品数</th>
+                    <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">占比</th>
+                    <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">占比图</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in level4_data %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ item.name }}">{{ item.name }}</td>
+                    <td style="text-align: right; padding: 0.5rem;">{{ item.count }}</td>
+                    <td style="text-align: right; padding: 0.5rem;">{{ item.percentage }}%</td>
+                    <td style="padding: 0.5rem;">
+                        <div style="height: 12px; background: var(--border-color); border-radius: 6px; overflow: hidden; width: 150px;">
+                            <div style="height: 100%; background: linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-purple) 100%); width: {{ item.percentage }}%;"></div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    window.categoryAnalysisInit = function() {
+        var select = document.getElementById('category-filter');
+        var container = document.getElementById('category-table-container');
+        
+        if (!select || !container) {
+            console.log('category-analysis elements not found');
+            return;
+        }
+        
+        select.onchange = function() {
+            var selectedValue = this.value;
+            console.log('Category analysis filter changed to:', selectedValue);
+            container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">加载中...</div>';
+            
+            fetch(`/api/category-analysis?classification=${encodeURIComponent(selectedValue)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data || !data.items) {
+                        container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #ef4444;">数据格式错误</div>';
+                        return;
+                    }
+                    
+                    if (data.items.length === 0) {
+                        container.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted);">${data.label} 分类下暂无数据</div>`;
+                        return;
+                    }
+                    
+                    container.innerHTML = `
+                        <h3 style="font-size: 0.9375rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">${data.label} - 四级类目分布</h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">四级类目</th>
+                                    <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">商品数</th>
+                                    <th style="text-align: right; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">占比</th>
+                                    <th style="text-align: left; padding: 0.5rem; font-weight: 600; color: var(--text-secondary);">占比图</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.items.map(item => `
+                                    <tr style="border-bottom: 1px solid var(--border-color);">
+                                        <td style="padding: 0.5rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.name}">${item.name}</td>
+                                        <td style="text-align: right; padding: 0.5rem;">${item.count}</td>
+                                        <td style="text-align: right; padding: 0.5rem;">${item.percentage}%</td>
+                                        <td style="padding: 0.5rem;">
+                                            <div style="height: 12px; background: var(--border-color); border-radius: 6px; overflow: hidden; width: 150px;">
+                                                <div style="height: 100%; background: linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-purple) 100%); width: ${item.percentage}%;"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                })
+                .catch(error => {
+                    console.error('加载数据失败:', error);
+                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #ef4444;">加载数据失败，请刷新页面重试</div>';
+                });
+        };
+    };
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.categoryAnalysisInit);
+    } else {
+        window.categoryAnalysisInit();
+    }
+</script>
+{% endblock %}
